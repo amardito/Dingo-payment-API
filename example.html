@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.min.js"></script>
+ 
+  <script>
+    
+    var io = io("http://localhost:8000");
+
+    io.on('connect', () => {
+      io.emit('persistId',{
+        id: localStorage.getItem('id') || 'guest',
+        username: localStorage.getItem('username') || null
+      })
+    })
+
+    io.on('Server Connect', (data) => {
+      console.log('connected', data)
+    })
+
+    io.on('payment', (data) => {
+      console.log(data)
+    })
+
+    function CreateId() {
+      var username = document.getElementById('username').value
+
+      if (username !== "") {
+
+        var newId = Math.floor(Math.random() * (100 - 999) + 999); //generate new invoice
+
+        document.getElementById("id").value = String(newId);
+
+        localStorage.setItem('id', String(newId));
+        localStorage.setItem('username', username);
+
+        io.emit('persistId',{
+          id: String(newId),
+          username: username
+        })
+      }
+    }
+  
+  </script>
+
+  <title>Document</title>
+</head>
+<body>
+  <input type="text" id="id" placeholder="id" readonly>
+  <input type="text" id="username" placeholder="username">
+  <input type="button" value="Click me" onclick="CreateId()">
+  <script>
+    if (localStorage.getItem('id')) {
+      document.getElementById("id").value = localStorage.getItem('id');
+      document.getElementById("username").value = localStorage.getItem('username');
+    }
+  </script>
+</body>
+</html>
