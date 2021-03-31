@@ -55,7 +55,7 @@ client.on('donations', ([{ donator, message, amount }]) => {
     method: 'POST',
   };
   let buffer = '';
-  const req = server.request(options, (res) => {
+  const req = app.request(options, (res) => {
     res.on('data', (chunk) => {
       buffer += chunk;
     });
