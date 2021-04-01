@@ -1,6 +1,8 @@
 require('dotenv').config();
 
-const { EMAIL, PASSWORD, CLIENT } = process.env;
+const {
+  EMAIL, PASSWORD, ORIGIN_CLIENT, SERVER_PORT,
+} = process.env;
 const express = require('express');
 const bp = require('body-parser');
 const cors = require('cors');
@@ -11,7 +13,7 @@ const app = express();
 const server = require('http').createServer(app);
 const io = require('socket.io')(server, {
   cors: {
-    origin: CLIENT,
+    origin: ORIGIN_CLIENT,
   },
 });
 
@@ -27,7 +29,7 @@ io.on('connection', (socket) => { // socket realtime
   });
 });
 
-app.use(cors({ origin: CLIENT, optionsSuccessStatus: 200 }));
+app.use(cors({ origin: ORIGIN_CLIENT, optionsSuccessStatus: 200 }));
 app.use(bp.json());
 app.use(bp.urlencoded({ extended: false }));
 
@@ -81,6 +83,6 @@ client.on('donations', ([{ donator, message, amount }]) => {
   // compare between saweria and sql id invoice
 });
 
-server.listen(8000, () => {
+server.listen(SERVER_PORT, () => {
   client.login(EMAIL, PASSWORD);
 });

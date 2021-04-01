@@ -6,7 +6,9 @@ EMAIL = "example@gmail.com"
 
 PASSWORD = "example password"
 
-CLIENT = "http://example"
+ORIGIN_CLIENT = "http://example"
+
+SERVER_PORT = "5000"
 
 ```
 
