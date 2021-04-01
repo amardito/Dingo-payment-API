@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const bp = require('body-parser');
 const cors = require('cors');
 const SaweriaClient = require('saweria');
 
@@ -25,55 +26,56 @@ io.on('connection', (socket) => { // socket realtime
 });
 
 app.use(cors());
+app.use(bp.json());
+app.use(bp.urlencoded({ extended: false }));
+
 app.post('/fakeDonate', (req, res) => { // send fake donation
   client.sendFakeDonation();
   res.status(200).json({ message: 'hit fake donation' });
 });
 
-client.on('login', (user) => { // login
+client.on('login', (user) => { // login saweria
   console.log('\nLogged in as: ', user.username);
 });
 
-client.on('donations', ([{ donator, message, amount }]) => {
-  const qString = JSON.stringify({ donator, message, amount });
+const http = require('http');
+const querystring = require('querystring');
 
-  // const options = {
-  //   hostname: 'example.com',
-  //   port: 80,
-  //   path: 'some.php',
-  //   method: 'POST',
-  //   headers: {
-  //     'Content-Type': 'application/x-www-form-urlencoded',
-  //     'Content-Length': `${qString.length}`,
-  //   },
-  // };
-
+function postToPHP(data) { // function POST to php
+  const qs = querystring.stringify(data);
+  const qslength = qs.length;
   const options = {
-    url: 'http://www.usefulangle.com',
-    port: '80',
-    path: '/post/ajax.php',
+    hostname: 'localhost',
+    port: 80,
+    path: 'mcdingo-shop/pembayaran.php',
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Content-Length': qslength,
+    },
+    data: {
+      item_id: qs,
+    },
   };
-  let buffer = '';
-  const req = app.request(options, (res) => {
-    res.on('data', (chunk) => {
-      buffer += chunk;
-    });
-    res.on('end', () => {
-      console.log(buffer);
-    });
+  console.log(`post data to : ${data.username}\n`); // checking is function working properly
+  const req = http.request(options);
+  req.write(qs);
+  req.end();
+}
+
+client.on('donations', ([{ donator, message, amount }]) => {
+  io.to(message).emit('payment', { // emit console.log to header.php every transaction
+    idPesanan: message,
+    username: donator,
+    harga: amount,
   });
 
-  req.write(qString);
-  req.end();
-
-  console.log(`\nnew donation from : ${donator} | invoice : ${message} | amount : ${amount}`);
-  // io.to(message).emit('payment', {
-  //   idPesanan: message,
-  //   username: donator,
-  //   harga: amount,
-  // });
-
+  console.log('\nnew donation: ', { idPesanan: message, username: donator, harga: amount });
+  postToPHP({ // POST to pembayaran.php with transaction data
+    idPesanan: message,
+    username: donator,
+    harga: amount,
+  });
   // compare between saweria and sql id invoice
 });
 
